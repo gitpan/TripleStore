@@ -3,7 +3,7 @@
 # -------------------------------------------------------------------------------------
 #
 #       Author : Jean-Michel Hiver (jhiver@mkdoc.com).
-#      Version : $Id: TripleStore.pm,v 1.1.1.1 2003/01/13 18:20:39 jhiver Exp $
+#      Version : $Id: TripleStore.pm,v 1.3 2003/01/27 16:11:51 jhiver Exp $
 #
 #    Description:
 #
@@ -24,7 +24,7 @@ use TripleStore::Mixin::Class;
 use TripleStore::Mixin::Unimplemented;
 
 our @ISA = qw /TripleStore::Mixin::Class/;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 ##
@@ -265,8 +265,7 @@ You do that using a clause object.
   $::DB->delete ($clause);
 
 The current MySQL driver does not support complex conditions
-yet (i.e. $clause1 & ( $clause2 | $clause3 )), however this is
-planned for the future.
+for deletion yet (i.e. $clause1 & ( $clause2 | $clause3 )).
 
 
 =head2 Updating exising triples
@@ -274,11 +273,13 @@ planned for the future.
 Same as delete, except that you define a hashref of elements
 to set, i.e.
 
-  # clause that matches all triples with:
-  #    predicate eq 'price'
-  #    object    >  100.25
+  # this is a silly update:
+  # for everything that has a price greater than
+  # 125.25, set the price to 90.
   my $clause = $::DB->clause (undef, 'price', [ '>', 125.25 ]);
-  $::DB->delete ( { price => 90 }, $clause);
+  $::DB->update ( { object => 90 }, $clause);
+
+You can update on 'subject', 'predicate' or 'object'.
 
 
 =head1 QUERYING THE TRIPLE STORE
@@ -399,7 +400,10 @@ same license as Perl itself.
 
 =head1 SEE ALSO
 
+  # The TripleStore mailing list
+  http://www.email-lists.org/mailman/listinfo/triplestore
+  
+  # Triple Querying with SQL
   http://www.picdiary.com/triplequerying/
-
 
 =cut
