@@ -1,7 +1,6 @@
 use strict;
 use warnings;
 
-exit if (-e 't/driver.nfo');
 
 while (1)
 {

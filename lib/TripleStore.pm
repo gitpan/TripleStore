@@ -24,7 +24,7 @@ use TripleStore::Mixin::Class;
 use TripleStore::Mixin::Unimplemented;
 
 our @ISA = qw /TripleStore::Mixin::Class/;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 ##

@@ -3,7 +3,7 @@
 # -------------------------------------------------------------------------------------
 #
 #       Author : Jean-Michel Hiver (jhiver@mkdoc.com).
-#      Version : $Id: SQL.pm,v 1.1.1.1 2003/01/13 18:20:40 jhiver Exp $
+#      Version : $Id: SQL.pm,v 1.2 2003/01/21 14:35:01 jhiver Exp $
 #
 #    Description:
 #
@@ -32,7 +32,7 @@ sub next
 # -------------------------------------------------------------------------------------
 #
 #       Author : Jean-Michel Hiver (jhiver@mkdoc.com).
-#      Version : $Id: SQL.pm,v 1.1.1.1 2003/01/13 18:20:40 jhiver Exp $
+#      Version : $Id: SQL.pm,v 1.2 2003/01/21 14:35:01 jhiver Exp $
 #
 #    Description:
 #
@@ -306,13 +306,14 @@ sub select
     local $ObjectText    = $self->_sql_symbol_object_text();
     local $ObjectNum     = $self->_sql_symbol_object_num();
     
-    local @ClauseList = $query->list_clauses();
-    local @VariableList = $query->list_variables();
-    local %ClauseToAlias = map { $_ => $self->_next_alias() } @ClauseList;
+    local @ClauseList    = $query->list_clauses();
+    local @VariableList  = $query->list_variables();
+    local %ClauseToAlias = ();
+    $self->_construct_clause_to_alias ($query);
     local %VariableToBindings = map { $_ => $self->_select_bindings ($_) } @VariableList;
     
     my @sql = ();
-    push @sql, "SELECT DISTINCT "   . $self->_sql_select_variables (@variables);
+    push @sql, "SELECT "   . $self->_sql_select_variables (@variables);
     push @sql, "FROM "     . join ', ', map { "$TripleStore AS $_" } sort values %ClauseToAlias;
     push @sql, "WHERE "    . $self->_sql_select_where ($query);
     push @sql, "ORDER BY " . $self->_sql_select_order_by (@sort) if (scalar @sort);
@@ -326,6 +327,40 @@ sub select
     my @bound = $query->criterion_values;
     my $sth = $self->execute ($sql, @bound);
     return new TripleStore::Driver::SQLResultSet ($sth);
+}
+
+
+##
+# $self->_construct_clause_to_alias ($query);
+# -------------------------------------------
+# Aliases each clause with an alias.
+##
+sub _construct_clause_to_alias
+{
+    my $self  = shift;
+    my $query = shift;
+    
+    my @to_process = ();
+    if ($query->isa ('TripleStore::Query::Or'))
+    {
+	my $alias = $self->_next_alias();
+	my @subq  = $query->list_subqueries();
+	for (@subq)
+	{
+	    $_->isa ('TripleStore::Query::Criterion') ?
+	        $ClauseToAlias{$_} = $alias :
+		$self->_construct_clause_to_alias ($_);
+	}
+    }
+    elsif ($query->isa ('TripleStore::Query::And'))
+    {
+	my @subq  = $query->list_subqueries();
+	for (@subq) { $self->_construct_clause_to_alias ($_) }
+    }
+    else
+    {
+	$ClauseToAlias{$query} = $self->_next_alias();
+    }
 }
 
 
